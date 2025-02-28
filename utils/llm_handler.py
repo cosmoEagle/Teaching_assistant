@@ -2,6 +2,7 @@ import google.generativeai as genai
 import os
 from dotenv import load_dotenv
 from .prompts import get_system_prompt, get_proficiency_guidelines
+from .leetcode_api import fetch_leetcode_question
 
 load_dotenv()
 
@@ -11,6 +12,11 @@ model = genai.GenerativeModel('gemini-2.0-flash')
 
 def get_gemini_response_stream(user_prompt, leetcode_url, conversation_history, proficiency_level):
     """Get streaming response from Gemini with context management"""
+    
+    # Fetch question context
+    question = fetch_leetcode_question(leetcode_url)
+    if not question:
+        return "Sorry, I couldn't fetch the question details. Please check the URL and try again."
     
     # Get system prompt and proficiency guidelines
     system_prompt = get_system_prompt(leetcode_url, proficiency_level)
@@ -26,21 +32,26 @@ def get_gemini_response_stream(user_prompt, leetcode_url, conversation_history, 
     prompt_text = f"""
     {system_prompt}
 
-    Student Proficiency Level: {proficiency_level}
+    PROBLEM CONTEXT:
+    {question.get_formatted_context()}
+
+    STUDENT INFORMATION:
+    Proficiency Level: {proficiency_level}
     
-    Previous conversation:
+    CONVERSATION HISTORY:
     {context}
     
-    User question: {user_prompt}
+    CURRENT QUESTION:
+    {user_prompt}
     
-    Guidelines for this proficiency level:
+    RESPONSE GUIDELINES:
     {guidelines}
     
     Additional Instructions:
-    1. Don't provide direct solutions
-    2. Guide with hints and questions appropriate for {proficiency_level.split('(')[0].strip()} level
-    3. Focus on building problem-solving intuition
-    4. Use examples to illustrate concepts
+    1. Use the problem details provided above to give accurate guidance
+    2. Consider the problem's difficulty ({question.difficulty}) when providing hints
+    3. Reference relevant topics: {', '.join(question.topic_tags)}
+    4. Don't provide direct solutions
     5. Use code blocks for any code snippets (wrapped in ```)
     6. Use mathematical notation when needed (wrapped in $ or $$)
     
