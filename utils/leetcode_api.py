@@ -2,7 +2,8 @@ import requests
 from typing import Dict, Optional
 import json
 from bs4 import BeautifulSoup
-
+import requests
+from functools import lru_cache
 class LeetCodeQuestion:
     def __init__(self, data: Dict):
         self.title = data.get('questionTitle', '')
@@ -133,23 +134,19 @@ Similar Questions: {self._format_similar_questions()}
             for q in self.similar_questions
         ])
 
-def fetch_leetcode_question(leetcode_url: str) -> Optional[LeetCodeQuestion]:
-    """Fetch question data from API"""
+
+@lru_cache(maxsize=100)
+def fetch_leetcode_question(leetcode_url: str):
+    """Fetch question data from API with caching"""
     try:
-        # Extract title slug from LeetCode URL
         title_slug = leetcode_url.split('problems/')[1].rstrip('/')
-        
-        # Construct API URL
         api_url = f"https://alfa-leetcode-api.onrender.com/select?titleSlug={title_slug}"
         
-        # Fetch data
         response = requests.get(api_url)
         response.raise_for_status()
         
-        # Parse response
         question_data = response.json()
         return LeetCodeQuestion(question_data)
-        
     except Exception as e:
         print(f"Error fetching question: {e}")
         return None
