@@ -1,4 +1,3 @@
-import dis
 import streamlit as st
 from utils.leetcode import validate_leetcode_url
 from utils.stream_handler import stream_response
@@ -27,7 +26,6 @@ def apply_custom_css():
     </style>
     """, unsafe_allow_html=True)
 
-# app.py
 
 def initialize_session_state():
     """Initialize all session state variables"""
@@ -49,11 +47,13 @@ def display_problem_details():
             with st.expander("Problem Details", expanded=False):
                 st.markdown(st.session_state.problem_details)
 
-def display_problem_description(expanded=False):
-    """Display full problem description if available"""
+def display_full_problem_description(expanded=False):
+    """Display full problem description with images"""
     if st.session_state.current_question:
         with st.expander("Full Problem Description", expanded=expanded):
-            st.markdown(st.session_state.current_question.question_text)
+            # Display formatted description with images
+            st.markdown(st.session_state.current_question.get_formatted_description())
+            
 
 def main():
     st.set_page_config(
@@ -124,11 +124,11 @@ def main():
                 st.error("Please enter a valid LeetCode URL")
         
         # Display problem details (in sidebar)
-        display_problem_description(expanded=True)
+        display_full_problem_description(expanded=True)
         display_problem_details()
 
     
-    display_problem_description()
+    display_full_problem_description()
 
     # Display current problem if exists
     if st.session_state.current_problem:

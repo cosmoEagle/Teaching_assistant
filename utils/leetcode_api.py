@@ -7,13 +7,53 @@ class LeetCodeQuestion:
     def __init__(self, data: Dict):
         self.title = data.get('questionTitle', '')
         self.difficulty = data.get('difficulty', '')
-        self.question_text = self._clean_html(data.get('question', ''))
+        self.raw_html = data.get('question', '')
+        self.question_text, self.images = self._process_html(self.raw_html)
         self.topic_tags = [tag['name'] for tag in data.get('topicTags', [])]
         self.examples = data.get('exampleTestcases', '').split('\n')
         self.similar_questions = self._parse_similar_questions(data.get('similarQuestions', ''))
         self.question_id = data.get('questionFrontendId', '')
         self.link = data.get('link', '')
 
+    def _process_html(self, html_content: str) -> tuple:
+        """Process HTML content and extract images"""
+        soup = BeautifulSoup(html_content, 'html.parser')
+        images = []
+        
+        # Extract images
+        for img in soup.find_all('img'):
+            src = img.get('src', '')
+            alt = img.get('alt', '')
+            if src:
+                images.append({
+                    'src': src,
+                    'alt': alt
+                })
+            # Replace image with placeholder
+            img.replace_with(f'[Image {len(images)}]')
+        
+        # Convert tables to markdown
+        for table in soup.find_all('table'):
+            markdown_table = self._convert_table_to_markdown(table)
+            table.replace_with(soup.new_string(markdown_table))
+        
+        # Get clean text
+        text = soup.get_text()
+        return text.strip(), images
+
+    def get_formatted_description(self) -> str:
+        """Return formatted problem description with images"""
+        description = self.question_text
+        
+        # Add image references at appropriate places
+        for i, image in enumerate(self.images, 1):
+            description = description.replace(
+                f'[Image {i}]',
+                f'\n\n![{image["alt"]}]({image["src"]})\n\n'
+            )
+        
+        return description
+    
     def _clean_html(self, html_content: str) -> str:
         """Convert HTML to clean text"""
         soup = BeautifulSoup(html_content, 'html.parser')
