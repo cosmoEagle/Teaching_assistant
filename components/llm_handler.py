@@ -1,7 +1,7 @@
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
-from .prompts import get_system_prompt, get_proficiency_guidelines
+from agents.prompts import get_system_prompt, get_proficiency_guidelines
 from .leetcode_api import fetch_leetcode_question
 
 load_dotenv()

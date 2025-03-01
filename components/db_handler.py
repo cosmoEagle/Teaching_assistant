@@ -1,4 +1,3 @@
-# utils/db_handler.py
 from pymongo import MongoClient
 from datetime import datetime
 import os

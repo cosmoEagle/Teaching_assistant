@@ -140,7 +140,7 @@ def fetch_leetcode_question(leetcode_url: str):
     """Fetch question data from API with caching"""
     try:
         title_slug = leetcode_url.split('problems/')[1].rstrip('/')
-        api_url = f"https://alfa-leetcode-api.onrender.com/select?titleSlug={title_slug}"
+        api_url = f"https://api-miy0.onrender.com/select?titleSlug={title_slug}"
         
         response = requests.get(api_url)
         response.raise_for_status()
