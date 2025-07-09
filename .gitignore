@@ -1,0 +1,48 @@
+# Environment files
+.env
+.env.*
+
+# Python
+__pycache__/
+*/__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Streamlit
+.streamlit/
+
+# Database
+*.db
+*.sqlite
+
+# Cache
+.cache/
+*.cache
+
+# Temporary files
+*.tmp
+temp/
+
+# Application specific
+chat_history.json
+user_data/

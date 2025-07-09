@@ -1,4 +1,5 @@
 import streamlit as st
+from datetime import datetime
 from components.leetcode import validate_leetcode_url
 from components.stream_handler import stream_response
 from components.llm_handler import get_gemini_response_stream
@@ -6,6 +7,7 @@ from components.leetcode_api import fetch_leetcode_question
 from components.db_handler import DatabaseHandler
 from components.history_sidebar import render_chat_history_sidebar
 from utils.session_utils import initialize_session_state, clear_chat_history, save_current_chat
+from utils.rate_limiter import rate_limiter
 from ui.components.ui_utils import apply_custom_css, display_problem_details, display_full_problem_description
 
 def process_leetcode_url(leetcode_url):
@@ -70,6 +72,9 @@ def main():
         
         render_chat_history_sidebar(st.session_state.db_handler)
         
+        # Display rate limiting info
+        rate_limiter.display_rate_limit_info()
+        
         display_full_problem_description(expanded=True)
         display_problem_details()
     
@@ -92,6 +97,27 @@ def main():
         if not st.session_state.current_problem:
             st.warning("Please enter a LeetCode problem URL first!")
             return
+        
+        # Check rate limits before processing
+        rate_status = rate_limiter.check_rate_limit()
+        if not rate_status['allowed']:
+            st.error(f"🚫 {rate_status['message']}")
+            if rate_status['reset_time']:
+                time_until_reset = rate_status['reset_time'] - datetime.now()
+                minutes_until_reset = max(0, int(time_until_reset.total_seconds() / 60))
+                st.info(f"⏰ Try again in {minutes_until_reset} minutes.")
+            return
+        
+        # Check token limits
+        estimated_tokens = rate_limiter.estimate_tokens(prompt)
+        token_status = rate_limiter.check_token_limit(estimated_tokens)
+        if not token_status['allowed']:
+            st.error(f"📝 {token_status['message']}")
+            st.info("💡 Try breaking your question into smaller parts or be more concise.")
+            return
+        
+        # Record the query
+        rate_limiter.add_query_timestamp()
         
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
